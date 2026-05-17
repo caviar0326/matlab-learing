@@ -1,57 +1,55 @@
-function result = imageInstruct(wptr, prefix, ext, nPics)
-
-% 默认结果为成功
-result = 1;
-
-% 统一按键名字
+ clear all;
 KbName('UnifyKeyNames');
+Screen('Preference','SkipSyncTests',1);
 
-spaceKey = KbName('space');
-escapeKey = KbName('escape');
+try
+    % 打开窗口
+    wptr = Screen('OpenWindow', 0, 255,[50 50 850 600]);
+  
+    % 设置图片数量
+    nPics = 3;
 
-for i = 1:nPics
+    % 获取空格键编号
+    spaceKey = KbName('space');
+    escapeKey = KbName('escape');           
 
-    % 生成图片文件名，例如 start1.png
-    filename = sprintf('%s%d.%s', prefix, i, ext);
+    for i = 1:nPics %一张张显示图片
+        filename = ['start' num2str(i) '.jpg']; % 生成图片文件名
+        fprintf('正在显示：%s\n', filename);   
 
-    % 检查图片是否存在
-    if ~exist(filename, 'file')
-        fprintf('找不到图片文件：%s\n', filename);
-        result = -1;
-        return;
-    end
+        img = imread(filename);
+        tex=Screen('MakeTexture',wptr,img);
 
-    % 读取图片
-    img = imread(filename);
+        Screen('DrawTexture', wptr, tex);
+        Screen('Flip', wptr);
 
-    % 转成 texture
-    tex = Screen('MakeTexture', wptr, img);
+        
+        while 1
+            [keyIsDown, ~, keyCode] = KbCheck; %等待按键
 
-    % 画图片
-    Screen('DrawTexture', wptr, tex);
+            if keyIsDown
 
-    % 显示图片
-    Screen('Flip', wptr);
+                if keyCode(spaceKey)
 
-    % 等待按键
-    while 1
-        [keyIsDown, ~, keyCode] = KbCheck;
+                    while KbCheck  % 等待空格松开，避免一次空格跳过两张
+                        WaitSecs(0.01);
+                    end
 
-        if keyIsDown
+                    Screen('Close',tex);  %关闭 / 释放这个 texture 占用的显卡资源
+                    break;
 
-            if keyCode(escapeKey)
-                result = -1;
-                Screen('Close', tex);
-                return;
+                elseif keyCode(escapeKey)
+                    Screen('Close',tex);
+                    sca;
+                    return;
+                end
 
-            elseif keyCode(spaceKey)
-                Screen('Close', tex);
-                KbReleaseWait;
-                break;
             end
-
         end
     end
-end
+    sca;
 
+catch
+    sca;
+    rethrow(psychlasterror);
 end
